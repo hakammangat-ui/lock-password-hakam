@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Lockup Password Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #FF4444;
+            --dark-bg: #2d2d2d;
+            --darker-bg: #1a1a1a;
+            --border-color: #3a3a3a;
+            --text-primary: #ffffff;
+            --text-secondary: #b0b0b0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--dark-bg);
+            color: var(--text-primary);
+            overflow: hidden;
+        }
+
+        .dashboard-container {
+            display: flex;
+            height: 100vh;
+            background-color: var(--dark-bg);
+        }
+
+        /* ============ SIDEBAR ============ */
+        .sidebar {
+            width: 250px;
+            background-color: var(--darker-bg);
+            border-right: 1px solid var(--border-color);
+            padding: 20px 0;
+            overflow-y: auto;
+            position: fixed;
+            height: 100vh;
+            left: 0;
+            top: 0;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+
+        .sidebar-logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary-color);
+            text-shadow: 0 2px 10px rgba(255, 68, 68, 0.3);
+        }
+
+        .sidebar-menu {
+            list-style: none;
+        }
+
+        .sidebar-menu li {
+            margin: 0;
+        }
+
+        .sidebar-menu a {
+            display: block;
+            padding: 15px 20px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+            cursor: pointer;
+        }
+
+        .sidebar-menu a:hover,
+        .sidebar-menu a.active {
+            color: var(--primary-color);
+            background-color: rgba(255, 68, 68, 0.1);
+            border-left-color: var(--primary-color);
+        }
+
+        .sidebar-menu .icon {
+            margin-right: 10px;
+            display: inline-block;
+            width: 20px;
+            text-align: center;
+        }
+
+        .sidebar-footer {
+            padding: 20px;
+            border-top: 1px solid var(--border-color);
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+        }
+
+        .logout-btn {
+            width: 100%;
+            padding: 12px 20px;
+            background-color: rgba(255, 68, 68, 0.1);
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        /* ============ MAIN CONTENT ============ */
+        .main-content {
+            margin-left: 250px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 30px;
+            background-color: rgba(0, 0, 0, 0.3);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        .profile-avatar {
+            width: 40px;
+            height: 40px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 30px;
+        }
+
+        .content-page {
+            display: none;
+        }
+
+        .content-page.active {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ============ HOME PAGE ============ */
+        .welcome-section {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .welcome-title {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        .welcome-text {
+            font-size: 16px;
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #ff2222;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 68, 68, 0.3);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 68, 68, 0.1);
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        /* ============ PASSWORDS PAGE ============ */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .search-box {
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+
+        .search-box::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .password-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .password-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .password-card:hover {
+            border-color: var(--primary-color);
+            background: rgba(255, 68, 68, 0.05);
+        }
+
+        .password-card-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-top: 10px;
+            margin-bottom: 5px;
+        }
+
+        .password-card-username {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+        }
+
+        .password-card-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .card-btn {
+            flex: 1;
+            padding: 8px 12px;
+            font-size: 12px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .card-btn-edit {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .card-btn-edit:hover {
+            background: #ff2222;
+        }
+
+        .card-btn-delete {
+            background: rgba(255, 68, 68, 0.2);
+            color: var(--primary-color);
+        }
+
+        .card-btn-delete:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+
+        /* ============ SETTINGS PAGE ============ */
+        .settings-section {
+            max-width: 500px;
+        }
+
+        .settings-item {
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .settings-label {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 5px;
+        }
+
+        .settings-value {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        /* ============ MODAL ============ */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: var(--darker-bg);
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .close-btn {
+            color: var(--text-secondary);
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            background: none;
+        }
+
+        .close-btn:hover {
+            color: var(--primary-color);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .form-group select {
+            appearance: none;
+            cursor: pointer;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ffffff' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            padding-right: 30px;
+        }
+
+        .form-group select option {
+            background-color: var(--darker-bg);
+            color: var(--text-primary);
+            padding: 8px 10px;
+        }
+
+        .form-group select option:checked {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+        }
+
+        .modal-buttons button {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- SIDEBAR -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">🔒 Lockup</div>
+            </div>
+
+            <ul class="sidebar-menu">
+                <li><a onclick="showPage('home')" class="nav-link active" data-page="home"><span class="icon">🏠</span> Home</a></li>
+                <li><a onclick="showPage('passwords')" class="nav-link" data-page="passwords"><span class="icon">🔐</span> Passwords</a></li>
+                <li><a onclick="showPage('settings')" class="nav-link" data-page="settings"><span class="icon">⚙️</span> Settings</a></li>
+            </ul>
+
+            <div class="sidebar-footer">
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="main-content">
+            <div class="top-bar">
+                <h1 class="page-title" id="pageTitle">Welcome</h1>
+                <div class="profile-avatar" id="userInitial">G</div>
+            </div>
+
+            <div class="content-area">
+                <!-- HOME PAGE -->
+                <div id="home" class="content-page active">
+                    <div class="welcome-section">
+                        <h2 class="welcome-title">Welcome, <span id="username">Guest</span>!</h2>
+                        <p class="welcome-text">Your passwords are encrypted and secure. Start by adding your first password or managing your existing ones.</p>
+                        <div class="action-buttons">
+                            <button class="btn btn-primary" onclick="showPage('passwords'); showAddPasswordModal()">Add Password</button>
+                            <button class="btn btn-secondary" onclick="showPage('passwords')">View All Passwords</button>
+                        </div>
+                    </div>
+                </div>
+ <!-- PASSWORDS PAGE -->
+                <div id="passwords" class="content-page">
+                    <div class="page-header">
+                        <h2 class="page-title">My Passwords</h2>
+                        <div style="display: flex; gap: 15px;">
+                            <input type="text" class="search-box" id="searchBox" placeholder="Search passwords..." oninput="searchPasswords()">
+                            <button class="btn btn-primary" onclick="showAddPasswordModal()">+ Add Password</button>
+                        </div>
+                    </div>
+
+                    <div id="passwordsList" class="password-grid">
+                        <div class="empty-state" style="grid-column: 1/-1;">
+                            <div class="empty-state-icon">📭</div>
+                            <p>No passwords saved yet. Click "Add Password" to get started!</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SETTINGS PAGE -->
+                <div id="settings" class="content-page">
+                    <div class="settings-section">
+                        <h2 class="page-title" style="margin-bottom: 30px;">Account Settings</h2>
+
+                        <div class="settings-item">
+                            <div class="settings-label">Username</div>
+                            <div class="settings-value" id="settingsUsername">-</div>
+                        </div>
+
+                        <div class="settings-item">
+                            <div class="settings-label">Email</div>
+                            <div class="settings-value" id="settingsEmail">-</div>
+                        </div>
+
+                        <div class="settings-item">
+                            <div class="settings-label">Account Created</div>
+                            <div class="settings-value" id="settingsCreated">-</div>
+                        </div>
+
+                        <div class="settings-item">
+                            <div class="settings-label">Total Passwords</div>
+                            <div class="settings-value" id="settingsTotalPasswords">0</div>
+                        </div>
+
+                        <button class="btn btn-primary" onclick="showChangePasswordModal()" style="margin-top: 20px;">Change Password</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADD PASSWORD MODAL -->
+    <div id="passwordModal" class="modal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="hideModal('passwordModal')">&times;</button>
+            <h2 style="margin-bottom: 20px;">Add Password</h2>
+
+            <form onsubmit="savePassword(event)">
+                <div class="form-group">
+                    <label>Service/Website Name</label>
+                    <input type="text" id="passwordName" required placeholder="e.g., Gmail, Facebook">
+                </div>
+
+                <div class="form-group">
+                    <label>Username/Email</label>
+                    <input type="text" id="passwordUsername" required placeholder="Your username or email">
+                </div>
+
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="passwordValue" required placeholder="Your password">
+                </div>
+
+                <div class="form-group">
+                    <label>Category</label>
+                    <select id="passwordCategory">
+                        <option value="Social Media">Social Media</option>
+                        <option value="Email">Email</option>
+                        <option value="Banking">Banking</option>
+                        <option value="Shopping">Shopping</option>
+                        <option value="Work">Work</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>URL (Optional)</label>
+                    <input type="text" id="passwordUrl" placeholder="https://example.com">
+                </div>
+
+                <div class="modal-buttons">
+                    <button type="submit" class="btn btn-primary">Save Password</button>
+                    <button type="button" class="btn btn-secondary" onclick="hideModal('passwordModal')">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- EDIT PASSWORD MODAL -->
+    <div id="editPasswordModal" class="modal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="hideModal('editPasswordModal')">&times;</button>
+            <h2 style="margin-bottom: 20px;">Edit Password</h2>
+
+            <form onsubmit="updatePassword(event)">
+                <div class="form-group">
+                    <label>Service/Website Name</label>
+                    <input type="text" id="editPasswordName" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Username/Email</label>
+                    <input type="text" id="editPasswordUsername" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="editPasswordValue" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Category</label>
+                    <select id="editPasswordCategory">
+                        <option value="Social Media">Social Media</option>
+                        <option value="Email">Email</option>
+                        <option value="Banking">Banking</option>
+                        <option value="Shopping">Shopping</option>
+                        <option value="Work">Work</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>URL (Optional)</label>
+                    <input type="text" id="editPasswordUrl">
+                </div>
+
+                <div class="modal-buttons">
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                    <button type="button" class="btn btn-secondary" onclick="hideModal('editPasswordModal')">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- CHANGE PASSWORD MODAL -->
+    <div id="changePasswordModal" class="modal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="hideModal('changePasswordModal')">&times;</button>
+            <h2 style="margin-bottom: 20px;">Change Password</h2>
+
+            <form onsubmit="changePassword(event)">
+                <div class="form-group">
+                    <label>Current Password</label>
+                    <input type="password" id="currentPassword" required placeholder="Enter your current password">
+                </div>
+
+                <div class="form-group">
+                    <label>New Password</label>
+                    <input type="password" id="newPassword" required placeholder="Enter new password">
+                </div>
+
+                <div class="form-group">
+                    <label>Confirm New Password</label>
+                    <input type="password" id="confirmNewPassword" required placeholder="Confirm new password">
+                </div>
+
+                <div class="modal-buttons">
+                    <button type="submit" class="btn btn-primary">Change Password</button>
+                    <button type="button" class="btn btn-secondary" onclick="hideModal('changePasswordModal')">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let allPasswords = [];
+        let currentUsername = '';
+        let currentEditingPasswordId = null;
+
+        // Initialize
+        async function init() {
+            await loadUserInfo();
+            await loadPasswords();
+        }
+
+        // Load user info
+        async function loadUserInfo() {
+            try {
+                const response = await fetch('/api/user-info');
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentUsername = data.username;
+                    document.getElementById('username').textContent = data.username;
+                    document.getElementById('userInitial').textContent = data.username.charAt(0).toUpperCase();
+                    document.getElementById('settingsUsername').textContent = data.username;
+                    document.getElementById('settingsEmail').textContent = data.email;
+                    document.getElementById('settingsCreated').textContent = new Date(data.created_at).toLocaleDateString();
+                }
+            } catch (error) {
+                console.error('Error loading user info:', error);
+            }
+        }
+
+       // Load passwords
+        async function loadPasswords() {
+            try {
+                const response = await fetch('/api/passwords');
+                const data = await response.json();
+                
+                if (data.success) {
+                    allPasswords = data.passwords;
+                    displayPasswords(allPasswords);
+                    document.getElementById('settingsTotalPasswords').textContent = allPasswords.length;
+                }
+            } catch (error) {
+                console.error('Error loading passwords:', error);
+            }
+        }
+
+        // Display passwords
+        function displayPasswords(passwords) {
+            const container = document.getElementById('passwordsList');
+            
+            if (passwords.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1/-1;">
+                        <div class="empty-state-icon">📭</div>
+                        <p>No passwords saved yet. Click "Add Password" to get started!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            passwords.forEach(pwd => {
+                html += `
+                    <div class="password-card">
+                        <div class="password-card-title">${pwd.name}</div>
+                        <div class="password-card-username">${pwd.username}</div>
+                        <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 10px;">
+                            <strong>Category:</strong> ${pwd.category}
+                        </div>
+                        <div class="password-card-actions">
+                            <button class="card-btn card-btn-edit" onclick="openEditPassword(${pwd.id})">Edit</button>
+                            <button class="card-btn card-btn-delete" onclick="deletePassword(${pwd.id})">Delete</button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        // Search passwords
+        function searchPasswords() {
+            const searchTerm = document.getElementById('searchBox').value.toLowerCase();
+            const filtered = allPasswords.filter(pwd => 
+                pwd.name.toLowerCase().includes(searchTerm) ||
+                pwd.username.toLowerCase().includes(searchTerm)
+            );
+            displayPasswords(filtered);
+        }
+
+        // Show/hide pages
+        function showPage(pageName) {
+            document.querySelectorAll('.content-page').forEach(page => {
+                page.classList.remove('active');
+            });
+
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+
+            document.getElementById(pageName).classList.add('active');
+            document.querySelector(`[data-page="${pageName}"]`).classList.add('active');
+
+            const titles = {
+                'home': 'Welcome',
+                'passwords': 'My Passwords',
+                'settings': 'Account Settings'
+            };
+            document.getElementById('pageTitle').textContent = titles[pageName] || 'Lockup';
+        }
+
+        // Modal functions
+        function showAddPasswordModal() {
+            document.getElementById('passwordName').value = '';
+            document.getElementById('passwordUsername').value = '';
+            document.getElementById('passwordValue').value = '';
+            document.getElementById('passwordCategory').value = 'Other';
+            document.getElementById('passwordUrl').value = '';
+            showModal('passwordModal');
+        }
+
+        function showModal(modalId) {
+            document.getElementById(modalId).classList.add('show');
+        }
+
+        function hideModal(modalId) {
+            document.getElementById(modalId).classList.remove('show');
+        }
+
+        // Close modal on background click
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('modal')) {
+                e.target.classList.remove('show');
+            }
+        });
+
+        // Save password
+        async function savePassword(e) {
+            e.preventDefault();
+
+            const passwordData = {
+                name: document.getElementById('passwordName').value,
+                username: document.getElementById('passwordUsername').value,
+                password: document.getElementById('passwordValue').value,
+                category: document.getElementById('passwordCategory').value,
+                url: document.getElementById('passwordUrl').value || ''
+            };
+
+            try {
+                const response = await fetch('/api/passwords', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(passwordData)
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    alert('Password saved successfully!');
+                    hideModal('passwordModal');
+                    await loadPasswords();
+                } else {
+                    alert(data.message || 'Failed to save password');
+                }
+            } catch (error) {
+                alert('Error saving password: ' + error.message);
+                console.error('Save error:', error);
+            }
+        }
+
+        // Open edit password modal
+        async function openEditPassword(id) {
+            const password = allPasswords.find(p => p.id === id);
+            if (!password) {
+                alert('Password not found!');
+                return;
+            }
+
+            currentEditingPasswordId = id;
+            document.getElementById('editPasswordName').value = password.name;
+            document.getElementById('editPasswordUsername').value = password.username;
+            document.getElementById('editPasswordValue').value = password.password;
+            document.getElementById('editPasswordCategory').value = password.category;
+            document.getElementById('editPasswordUrl').value = password.url || '';
+            
+            showModal('editPasswordModal');
+        }
+
+        // Update password
+        async function updatePassword(e) {
+            e.preventDefault();
+
+            const passwordData = {
+                name: document.getElementById('editPasswordName').value,
+                username: document.getElementById('editPasswordUsername').value,
+                password: document.getElementById('editPasswordValue').value,
+                category: document.getElementById('editPasswordCategory').value,
+                url: document.getElementById('editPasswordUrl').value || ''
+            };
+
+            try {
+                const response = await fetch(`/api/passwords/${currentEditingPasswordId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(passwordData)
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    alert('Password updated successfully!');
+                    hideModal('editPasswordModal');
+                    await loadPasswords();
+                    currentEditingPasswordId = null;
+                } else {
+                    alert(data.message || 'Failed to update password');
+                }
+            } catch (error) {
+                alert('Error updating password: ' + error.message);
+                console.error('Update error:', error);
+            }
+        }
+
+        // Delete password
+        async function deletePassword(id) {
+            if (confirm('Are you sure you want to delete this password? This action cannot be undone.')) {
+                try {
+                    const response = await fetch(`/api/passwords/${id}`, {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+
+                    if (!response.ok) {
+                        const text = await response.text();
+                        throw new Error(`HTTP ${response.status}: ${text}`);
+                    }
+
+                    const data = await response.json();
+                    if (data.success) {
+                        alert('Password deleted successfully!');
+                        await loadPasswords();
+                    } else {
+                        alert(data.message || 'Failed to delete password');
+                    }
+                } catch (error) {
+                    alert('Error deleting password: ' + error.message);
+                    console.error('Delete error:', error);
+                }
+            }
+        }
+
+        // Change password
+        function showChangePasswordModal() {
+            document.getElementById('currentPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmNewPassword').value = '';
+            showModal('changePasswordModal');
+        }
+
+        async function changePassword(e) {
+            e.preventDefault();
+
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmNewPassword').value;
+
+            if (newPassword !== confirmPassword) {
+                alert('New passwords do not match!');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/change-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        current_password: document.getElementById('currentPassword').value,
+                        new_password: newPassword
+                    })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    alert('Password changed successfully!');
+                    hideModal('changePasswordModal');
+                } else {
+                    alert(data.message || 'Failed to change password');
+                }
+            } catch (error) {
+                alert('Error changing password: ' + error.message);
+                console.error('Change password error:', error);
+            }
+        }
+
+        // Logout
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                window.location.href = '/logout';
+            }
+        }
+
+        // Initialize on page load
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>

@@ -1,0 +1,315 @@
+{% extends "base.html" %}
+
+{% block title %}Sign Up - Lockup{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .auth-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        padding: 20px;
+    }
+
+    .auth-card {
+        background-color: var(--card-bg);
+        border-radius: 15px;
+        padding: 40px;
+        box-shadow: var(--shadow);
+        border: 1px solid var(--border-color);
+        max-width: 450px;
+        width: 100%;
+    }
+
+    .logo {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .logo-text {
+        font-size: 48px;
+        font-weight: bold;
+        color: var(--primary-color);
+        text-shadow: 0 2px 10px rgba(255, 68, 68, 0.3);
+    }
+
+    .auth-title {
+        text-align: center;
+        font-size: 28px;
+        margin-bottom: 30px;
+        color: var(--text-primary);
+    }
+
+    .password-strength {
+        margin-top: 10px;
+        display: none;
+    }
+
+    .strength-bar {
+        height: 6px;
+        background-color: var(--border-color);
+        border-radius: 3px;
+        overflow: hidden;
+        margin-bottom: 8px;
+    }
+
+    .strength-fill {
+        height: 100%;
+        width: 0%;
+        transition: width 0.3s ease, background-color 0.3s ease;
+    }
+
+    .strength-fill.weak {
+        width: 25%;
+        background-color: #f44336;
+    }
+
+    .strength-fill.medium {
+        width: 50%;
+        background-color: #ff9800;
+    }
+
+    .strength-fill.strong {
+        width: 75%;
+        background-color: #ffc107;
+    }
+
+    .strength-fill.excellent {
+        width: 100%;
+        background-color: #4CAF50;
+    }
+
+    .strength-text {
+        font-size: 12px;
+        color: var(--text-secondary);
+    }
+
+    .strength-text.weak {
+        color: #f44336;
+    }
+
+    .strength-text.medium {
+        color: #ff9800;
+    }
+
+    .strength-text.strong {
+        color: #ffc107;
+    }
+
+    .strength-text.excellent {
+        color: #4CAF50;
+    }
+
+    .suggestions {
+        background-color: var(--darker-bg);
+        padding: 10px;
+        border-radius: 6px;
+        font-size: 12px;
+        color: var(--text-secondary);
+        margin-top: 8px;
+        display: none;
+    }
+
+    .suggestions ul {
+        margin: 0;
+        padding-left: 20px;
+    }
+
+    .suggestions li {
+        margin: 3px 0;
+    }
+
+    .password-input-group {
+        position: relative;
+    }
+
+    .generate-btn {
+        position: absolute;
+        right: 10px;
+        top: 35px;
+        background: none;
+        border: none;
+        color: var(--primary-color);
+        cursor: pointer;
+        padding: 5px 10px;
+        font-size: 12px;
+        font-weight: 600;
+        transition: color 0.3s ease;
+    }
+
+    .generate-btn:hover {
+        color: #ff2222;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card slide-in">
+        <div class="logo">
+            <div class="logo-text">🔒 Lockup</div>
+        </div>
+
+        <div id="alert" class="alert"></div>
+
+        <h2 class="auth-title">Sign up</h2>
+        
+        <form id="signupForm" onsubmit="handleSignup(event)">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required placeholder="Choose a username">
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required placeholder="Enter your email">
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <div class="password-input-group">
+                    <input type="password" id="password" name="password" required placeholder="Create a password" oninput="checkPasswordStrength()">
+                    <button type="button" class="generate-btn" onclick="generatePassword()">Generate</button>
+                </div>
+                <div class="password-strength" id="passwordStrength">
+                    <div class="strength-bar">
+                        <div class="strength-fill" id="strengthFill"></div>
+                    </div>
+                    <div class="strength-text" id="strengthText">Weak</div>
+                    <div class="suggestions" id="suggestions">
+                        <strong>Suggestions:</strong>
+                        <ul id="suggestionsList"></ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="confirmPassword">Confirm Password</label>
+                <input type="password" id="confirmPassword" name="confirm_password" required placeholder="Confirm your password">
+            </div>
+
+            <div class="form-group">
+                <label for="masterKey">Master Key</label>
+                <input type="password" id="masterKey" name="master_key" required placeholder="Create a master key to access the app">
+                <small style="color: var(--text-secondary); margin-top: 5px; display: block;">You'll need this to access your passwords. Make it strong!</small>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 25px;">Sign up</button>
+            
+            <div style="text-align: center; margin-top: 20px;">
+                <span style="color: var(--text-secondary);">Already have an account?</span>
+                <a href="/login" style="color: var(--primary-color); text-decoration: none; font-weight: 600;"> Login here</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    async function handleSignup(event) {
+        event.preventDefault();
+        const btn = document.querySelector('button[type="submit"]');
+        btn.disabled = true;
+
+        const data = {
+            username: document.getElementById('username').value,
+            email: document.getElementById('email').value,
+            password: document.getElementById('password').value,
+            confirm_password: document.getElementById('confirmPassword').value,
+            master_key: document.getElementById('masterKey').value
+        };
+
+        try {
+            const response = await fetch('/signup', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showAlert(result.message, 'success');
+                // Store user data and email for verification
+                localStorage.setItem('user_id', result.user_id);
+                localStorage.setItem('user_email', result.email);
+                
+                setTimeout(() => {
+                    window.location.href = '/login';
+                }, 2000);
+            } else {
+                showAlert(result.message, 'error');
+            }
+        } catch (error) {
+            showAlert('An error occurred. Please try again.', 'error');
+            console.error(error);
+        } finally {
+            btn.disabled = false;
+        }
+    }
+
+    async function checkPasswordStrength() {
+        const password = document.getElementById('password').value;
+        if (!password) {
+            document.getElementById('passwordStrength').style.display = 'none';
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/password-strength', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password })
+            });
+
+            const result = await response.json();
+            const strengthDiv = document.getElementById('passwordStrength');
+            const strengthFill = document.getElementById('strengthFill');
+            const strengthText = document.getElementById('strengthText');
+            const suggestions = document.getElementById('suggestions');
+            const suggestionsList = document.getElementById('suggestionsList');
+
+            strengthDiv.style.display = 'block';
+            
+            // Update strength bar
+            strengthFill.className = `strength-fill ${result.strength.toLowerCase()}`;
+            strengthText.className = `strength-text ${result.strength.toLowerCase()}`;
+            strengthText.textContent = result.strength + ' Password';
+
+            // Update suggestions
+            if (result.feedback.length > 0) {
+                suggestions.style.display = 'block';
+                suggestionsList.innerHTML = result.feedback.map(f => `<li>Add ${f}</li>`).join('');
+            } else {
+                suggestions.style.display = 'none';
+            }
+        } catch (error) {
+            console.error('Error checking password strength:', error);
+        }
+    }
+
+    async function generatePassword() {
+        try {
+            const response = await fetch('/api/generate-password?length=16', {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            const result = await response.json();
+            const passwordInput = document.getElementById('password');
+            passwordInput.value = result.password;
+            
+            // Trigger strength check
+            checkPasswordStrength();
+            
+            showAlert('Password generated successfully!', 'success');
+        } catch (error) {
+            showAlert('Error generating password', 'error');
+            console.error(error);
+        }
+    }
+</script>
+{% endblock %}
